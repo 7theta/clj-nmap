@@ -55,7 +55,7 @@
                     :count (map-vals string->long (:hosts stats))}
              :hosts (mapv (comp compact parse) hosts)}
       (:debug fn-options) (assoc :debug {:xml raw-output
-                                         :parsed output}))))
+                                         :ast output}))))
 
 ;;; Implementation
 
@@ -68,15 +68,16 @@
                :status {:status (rename-keys
                                  (map-vals keyword (:attrs %))
                                  {:reason_ttl :reason-ttl})}
-               :address {:address (-> % :attrs
-                                      (update :addrtype keyword)
-                                      (rename-keys {:addr :ip :addrtype :type}))}
+               :address {:addresses [(let [addr (update (:attrs %) :addrtype keyword)]
+                                       (rename-keys addr {:addr (:addrtype addr)
+                                                          :addrtype :type}))]}
                :hostnames {:hostnames (map :attrs (:content %))}
                :ports {:ports (->> % :content (filter (fn [p] (= :port (:tag p))))
                                    (map parse))}
                :os (parse %)
                nil))
-       (reduce merge)))
+       (reduce (partial merge-with
+                  (fn [a b] (if (and (seq a) (seq b)) (concat a b) b))))))
 
 (defmethod ^:private parse :port
   [p]
