@@ -54,7 +54,8 @@
                                  string->double)
                     :count (map-vals string->long (:hosts stats))}
              :hosts (mapv (comp compact parse) hosts)}
-      (:debug fn-options) (assoc-in [:debug :xml] raw-output))))
+      (:debug fn-options) (assoc :debug {:xml raw-output
+                                         :parsed output}))))
 
 ;;; Implementation
 
@@ -63,7 +64,7 @@
 (defmethod ^:private parse :host
   [h]
   (->> h :content
-       (map #(condp = (:tag %)
+       (map #(case (:tag %)
                :status {:status (rename-keys
                                  (map-vals keyword (:attrs %))
                                  {:reason_ttl :reason-ttl})}
@@ -73,6 +74,7 @@
                :hostnames {:hostnames (map :attrs (:content %))}
                :ports {:ports (->> % :content (filter (fn [p] (= :port (:tag p))))
                                    (map parse))}
+               :os (parse %)
                nil))
        (reduce merge)))
 
@@ -126,6 +128,24 @@
                              "validity" {:validity (validity a)}
                              (parse a))))
                     (reduce merge))}))
+
+(defmethod ^:private parse :os
+  [os]
+  (let [match (->> os :content (filter #(= :osmatch (:tag %))) first)]
+    {:os (merge (dissoc (:attrs match) :line)
+                {:os-class (rename-keys
+                            (->> match :content (filter #(= :osclass (:tag %)))
+                                 first :attrs)
+                            {:osfamily :os-family
+                             :osgen :os-gen})}
+                {:ports-used (->> os :content (filter #(= :portused (:tag %)))
+                                  (map parse) (mapcat vals)
+                                  (map #(-> %
+                                            (rename-keys {:proto :protocol
+                                                          :portid :port-id})
+                                            (update :state keyword)
+                                            (update :protocol keyword)
+                                            (update :port-id string->long))))})}))
 
 (defmethod ^:private parse :table
   [e]
