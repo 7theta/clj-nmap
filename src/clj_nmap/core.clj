@@ -25,26 +25,36 @@
   "Runs the nmap command the using 'opts' as command line parameters and returns
   the parsed output for a successful run.
 
-  A exception is thrown if nmap terminates with a non-zero exit code."
+  A exception is thrown if nmap terminates with a non-zero exit code.
+
+  An optional ':debug true' keyword parameter can be passed at the end of the
+  call to include the raw XML output from nmap in the response under [:debug :xml]"
   [& opts]
-  (let [parse-ts (fn [ts] (-> ts string->long (* 1000) tc/from-long))
-        output (sh/with-programs [nmap]
-                 (->> opts (apply nmap "-oX" "-") xml/parse-str))
+  (let [[fn-options nmap-options] (->> opts reverse (partition-all 2)
+                                       (map reverse)
+                                       (split-with #(keyword? (first %))))
+        nmap-options (->> nmap-options reverse (reduce concat))
+        fn-options (->> fn-options (map vec) (into {}))
+        parse-ts (fn [ts] (-> ts string->long (* 1000) tc/from-long))
+        raw-output (sh/with-programs [nmap]
+                     (apply nmap "-oX" "-" nmap-options))
+        output (xml/parse-str raw-output)
         [hosts extra] ((juxt filter remove) #(= :host (:tag %)) (:content output))
         stats (->> extra (filter #(= :runstats (:tag %)))
                    first :content
                    (map #(hash-map (:tag %) (:attrs %)))
                    (reduce merge))]
-    {:scan {:cmd (-> output :attrs :args)
-            :version (-> output :attrs :version)
-            :start (-> output :attrs :start
-                       parse-ts)
-            :end (-> stats :finished :time
-                     parse-ts)
-            :elapsed (-> stats :finished :elapsed
-                         string->double)
-            :count (map-vals string->long (:hosts stats))}
-     :hosts (mapv (comp compact parse) hosts)}))
+    (cond-> {:scan {:cmd (-> output :attrs :args)
+                    :version (-> output :attrs :version)
+                    :start (-> output :attrs :start
+                               parse-ts)
+                    :end (-> stats :finished :time
+                             parse-ts)
+                    :elapsed (-> stats :finished :elapsed
+                                 string->double)
+                    :count (map-vals string->long (:hosts stats))}
+             :hosts (mapv (comp compact parse) hosts)}
+      (:debug fn-options) (assoc-in [:debug :xml] raw-output))))
 
 ;;; Implementation
 

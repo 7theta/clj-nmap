@@ -8,7 +8,7 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any others, from this software.
 
-(defproject com.7theta/clj-nmap "0.1.0"
+(defproject com.7theta/clj-nmap "0.2.0"
   :description "Clojure wrapper for the nmap command line tool"
   :url "https://github.com/7theta/clj-nmap"
   :license {:name "Eclipse Public License"
