@@ -9,9 +9,9 @@
 ;;   You must not remove this notice, or any others, from this software.
 
 (ns clj-nmap.core
-  (:require [utilis.types.number :refer [string->long string->double]]
+  (:require [crusta.core :refer [run]]
+            [utilis.types.number :refer [string->long string->double]]
             [utilis.map :refer [map-vals compact]]
-            [me.raynes.conch :as sh]
             [clojure.data.xml :as xml]
             [clj-time.coerce :as tc]
             [clj-time.format :as tf]
@@ -36,8 +36,7 @@
         nmap-options (->> nmap-options reverse (reduce concat))
         fn-options (->> fn-options (map vec) (into {}))
         parse-ts (fn [ts] (-> ts string->long (* 1000) tc/from-long))
-        raw-output (sh/with-programs [nmap]
-                     (apply nmap "-oX" "-" nmap-options))
+        raw-output @(run (into ["nmap" "-oX" "-"] nmap-options))
         output (xml/parse-str raw-output)
         [hosts extra] ((juxt filter remove) #(= :host (:tag %)) (:content output))
         stats (->> extra (filter #(= :runstats (:tag %)))
