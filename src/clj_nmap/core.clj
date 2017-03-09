@@ -22,7 +22,7 @@
 ;;; Public
 
 (defn nmap
-  "Runs the nmap command the using 'opts' as command line parameters and returns
+  "Runs the nmap command using the 'opts' as command line parameters and returns
   the parsed output for a successful run.
 
   A exception is thrown if nmap terminates with a non-zero exit code.
