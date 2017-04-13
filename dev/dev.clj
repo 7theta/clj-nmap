@@ -15,6 +15,4 @@
             [clojure.repl :refer [apropos dir doc find-doc pst source]]
 
             [clojure.pprint :refer [pprint]]
-            [clojure.reflect :refer [reflect]]
-
-            [me.raynes.conch :as sh]))
+            [clojure.reflect :refer [reflect]]))
