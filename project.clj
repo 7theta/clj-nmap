@@ -8,16 +8,16 @@
 ;;   the terms of this license.
 ;;   You must not remove this notice, or any others, from this software.
 
-(defproject com.7theta/clj-nmap "0.3.3"
+(defproject com.7theta/clj-nmap "0.3.4"
   :description "Clojure wrapper for the nmap command line tool"
   :url "https://github.com/7theta/clj-nmap"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [com.7theta/utilis "1.0.0"]
-                 [com.7theta/crusta "0.1.2"]
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [com.7theta/utilis "1.0.5"]
+                 [com.7theta/crusta "0.1.4"]
                  [org.clojure/data.xml "0.0.8"]
-                 [clj-time "0.13.0"]]
+                 [clj-time "0.14.2"]]
   :profiles {:dev {:global-vars {*warn-on-reflection* true}
                    :dependencies [[org.clojure/tools.namespace "0.2.11"]]
                    :source-paths ["dev"]}}
